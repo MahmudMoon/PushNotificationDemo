@@ -7,6 +7,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -45,26 +46,26 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         bluetooth_name = Secure.getString(getContentResolver(), "bluetooth_name");
         Device_ID = Secure.getString(getApplicationContext().getContentResolver(), Secure.ANDROID_ID);
+        textView = (TextView)findViewById(R.id.tv);
 
 
         FirebaseMessaging.getInstance().isAutoInitEnabled();
-        FirebaseMessaging.getInstance().subscribeToTopic("weather")
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        Toast.makeText(getApplicationContext(),"Subscribed",Toast.LENGTH_SHORT).show();
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Toast.makeText(getApplicationContext(),"Failed to subscribe",Toast.LENGTH_SHORT).show();
-            }
-        });
+//        FirebaseMessaging.getInstance().subscribeToTopic("weather")
+//                .addOnCompleteListener(new OnCompleteListener<Void>() {
+//                    @Override
+//                    public void onComplete(@NonNull Task<Void> task) {
+//                        Toast.makeText(getApplicationContext(),"Subscribed",Toast.LENGTH_SHORT).show();
+//                    }
+//                }).addOnFailureListener(new OnFailureListener() {
+//            @Override
+//            public void onFailure(@NonNull Exception e) {
+//                Toast.makeText(getApplicationContext(),"Failed to subscribe",Toast.LENGTH_SHORT).show();
+//            }
+//        });
 
         sharedPreferences = getSharedPreferences("Token",MODE_PRIVATE);
         firebaseDatabase = FirebaseDatabase.getInstance();
         mutableLiveData = new MutableLiveData<>();
-        textView = (TextView)findViewById(R.id.tv);
         mutableLiveData.observe(this, new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
@@ -136,6 +137,14 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-
-
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Intent intent = getIntent();
+        if(intent!=null){
+            String deviceName = intent.getStringExtra("deviceName");
+            String deviceId = intent.getStringExtra("deviceId");
+            textView.setText("Name : "+ deviceName + "\n" + "DeviceId : "+ deviceId);
+        }
+    }
 }

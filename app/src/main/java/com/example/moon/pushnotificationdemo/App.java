@@ -13,12 +13,13 @@ public class App extends Application {
     public static final String CHANEEL_ID = "Channel_One";
 
     @Override
-    @RequiresApi(api = Build.VERSION_CODES.O)
     public void onCreate() {
         super.onCreate();
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         FirebaseApp.initializeApp(getApplicationContext());
-        NotificationChannel notificationChannel = new NotificationChannel(CHANEEL_ID,"Channel One", NotificationManager.IMPORTANCE_HIGH);
-        NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.createNotificationChannel(notificationChannel);
+         if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O) {
+             NotificationChannel notificationChannel = new NotificationChannel(CHANEEL_ID, "Channel One", NotificationManager.IMPORTANCE_HIGH);
+             notificationManager.createNotificationChannel(notificationChannel);
+         }
     }
 }
