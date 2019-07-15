@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Push Notification Demo</string>
+    <string name="default_notification_channel_id">Channel_One</string>
 </resources>
