@@ -35,7 +35,7 @@ public class HangleNotifications extends FirebaseMessagingService {
         NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(getApplicationContext());
         Intent intent = new Intent(getApplicationContext(),MainActivity.class);
         intent.putExtra("deviceName",data.get("deviceName"));
-        intent.putExtra("deviceId",data.get("deviceId"));
+        intent.putExtra("deviceId",data.get("deviceID"));
         Log.i("MYTAG", "createNotifications: "+data.get("deviceName"));
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(),0,intent,0);

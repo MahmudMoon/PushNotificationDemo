@@ -11,7 +11,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.text.TextUtils;
 import android.util.Log;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,18 +42,91 @@ public class MainActivity extends AppCompatActivity {
     SharedPreferences sharedPreferences;
     public static String Device_ID;
     public static String bluetooth_name;
+    CheckBox cbWeather,cbMovie,cbGeneral,cbGame,cbAdult;
+
     @SuppressLint("HardwareIds")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+//        cbAdult = findViewById(R.id.cb_adult);
+//        cbGame = findViewById(R.id.cb_game);
+//        cbGeneral = findViewById(R.id.cb_general);
+//        cbMovie = findViewById(R.id.cb_movie);
+        cbWeather = findViewById(R.id.cb_weather);
+
+
         bluetooth_name = Secure.getString(getContentResolver(), "bluetooth_name");
         Device_ID = Secure.getString(getApplicationContext().getContentResolver(), Secure.ANDROID_ID);
         textView = (TextView)findViewById(R.id.tv);
 
+        Intent intent = getIntent();
+        if(intent!=null){
+            String deviceName = intent.getStringExtra("deviceName");
+            String deviceId = intent.getStringExtra("deviceId");
+           // textView.setText("Name : "+ deviceName + "\n" + "DeviceId : "+ deviceId);
+        }
 
-        FirebaseMessaging.getInstance().isAutoInitEnabled();
-//        FirebaseMessaging.getInstance().subscribeToTopic("weather")
+
+
+        cbWeather.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked){
+                   FirebaseMessaging.getInstance().subscribeToTopic("Weather");
+                }else{
+                    FirebaseMessaging.getInstance().unsubscribeFromTopic("Weather");
+                }
+            }
+        });
+
+//        cbMovie.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//            @Override
+//            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+//                if(isChecked){
+//                    FirebaseMessaging.getInstance().subscribeToTopic("Movie");
+//                }else{
+//                    FirebaseMessaging.getInstance().unsubscribeFromTopic("Movie");
+//                }
+//            }
+//        });
+//
+//        cbAdult.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//            @Override
+//            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+//                if(isChecked){
+//                    FirebaseMessaging.getInstance().subscribeToTopic("Adult");
+//                }else{
+//                    FirebaseMessaging.getInstance().unsubscribeFromTopic("Adult");
+//                }
+//            }
+//        });
+//
+//        cbGame.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//            @Override
+//            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+//                if(isChecked){
+//                    FirebaseMessaging.getInstance().subscribeToTopic("Game");
+//                }else{
+//                    FirebaseMessaging.getInstance().unsubscribeFromTopic("Game");
+//                }
+//            }
+//        });
+//
+//        cbGeneral.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//            @Override
+//            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+//                if(isChecked){
+//                    FirebaseMessaging.getInstance().subscribeToTopic("General");
+//                }else{
+//                    FirebaseMessaging.getInstance().unsubscribeFromTopic("General");
+//                }
+//            }
+//        });
+
+
+
+//                FirebaseMessaging.getInstance().subscribeToTopic("weather")
 //                .addOnCompleteListener(new OnCompleteListener<Void>() {
 //                    @Override
 //                    public void onComplete(@NonNull Task<Void> task) {
@@ -63,6 +139,44 @@ public class MainActivity extends AppCompatActivity {
 //            }
 //        });
 
+        FirebaseInstanceId.getInstance().getInstanceId()
+                .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<InstanceIdResult> task) {
+                        if(!task.isSuccessful()){
+                            return;
+                        }
+                        String token  = task.getResult().getToken();
+                        MySharedPref instance = MySharedPref.getInstance(getApplicationContext());
+                        String token_saved = instance.getToken();
+                        if(!TextUtils.isEmpty(token_saved) &&!token.equals(token_saved)){
+                            FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
+                            DatabaseReference databaseReference = firebaseDatabase.getReference();
+                            DeviceInfo deviceInfo = new DeviceInfo(bluetooth_name,Device_ID,token);
+                            databaseReference.child("DeviceTokens").child(Device_ID).setValue(deviceInfo).addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+                                    Toast.makeText(getApplicationContext(), "Successfully Stored Data", Toast.LENGTH_SHORT).show();
+                                }
+                            }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Toast.makeText(getApplicationContext(), "Failed To Store Data", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+
+            }
+        });
+
+        FirebaseMessaging.getInstance().isAutoInitEnabled();
+
+
         sharedPreferences = getSharedPreferences("Token",MODE_PRIVATE);
         firebaseDatabase = FirebaseDatabase.getInstance();
         mutableLiveData = new MutableLiveData<>();
@@ -73,7 +187,7 @@ public class MainActivity extends AppCompatActivity {
                 if(mySharedPref!=null){
                  mySharedPref.tokenSaved(s);
                 }
-                textView.setText(s);
+               // textView.setText(s);
                 databaseReference = firebaseDatabase.getReference();
                 DeviceInfo deviceInfo = new DeviceInfo(bluetooth_name,Device_ID,s);
                     databaseReference.child("DeviceTokens").child(Device_ID).setValue(deviceInfo).
@@ -106,7 +220,7 @@ public class MainActivity extends AppCompatActivity {
        String token =  getCurrentToken();
         if(token!=null){
             Log.i(TAG, "getCurrentToken: "+token);
-            textView.setText(token);
+           // textView.setText(token);
         }
 
     }
@@ -140,11 +254,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        Intent intent = getIntent();
-        if(intent!=null){
-            String deviceName = intent.getStringExtra("deviceName");
-            String deviceId = intent.getStringExtra("deviceId");
-            textView.setText("Name : "+ deviceName + "\n" + "DeviceId : "+ deviceId);
-        }
+
     }
 }
